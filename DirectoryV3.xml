@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+ <trees>
+     <tree path="/v3" title="下载类"/>
+     <tree path="/v3/client.go" title="客户端"/>
+     <tree path="/v3/doc.go" title="例子"/>
+     <tree path="/v3/error.go" title="错误"/>
+     <tree path="/v3/rate_limiter.go" title="限速"/>
+     <tree path="/v3/request.go" title="下载参数" extension="" presentableText="" tooltipTitle="" icon=""
+           textColor="" backgroundColor=""/>
+     <tree path="/v3/response.go" title="响应"/>
+     <tree path="/v3/util.go" title="内部"/>
+     <tree path="/v3/grab.go" title="方法"/>
+     <tree path="/v3/transfer.go" title="内部"/>
+    <tree path="/tools/selfupdate" title="更新类"/>
+</trees>

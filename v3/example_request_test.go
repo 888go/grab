@@ -14,15 +14,15 @@ func ExampleRequest_WithContext() {
 	defer cancel()
 
 // 使用上下文创建下载请求
-	req, err := NewRequest("", "http://example.com/example.zip")
+	req, err := X生成下载参数("", "http://example.com/example.zip")
 	if err != nil {
 		panic(err)
 	}
 	req = req.WithContext(ctx)
 
 // 发送下载请求
-	resp := DefaultClient.Do(req)
-	if err := resp.Err(); err != nil {
+	resp := X默认全局客户端.X下载(req)
+	if err := resp.X等待错误(); err != nil {
 		fmt.Println("error: request cancelled")
 	}
 
@@ -32,7 +32,7 @@ func ExampleRequest_WithContext() {
 
 func ExampleRequest_SetChecksum() {
 	// create download request
-	req, err := NewRequest("", "http://example.com/example.zip")
+	req, err := X生成下载参数("", "http://example.com/example.zip")
 	if err != nil {
 		panic(err)
 	}
@@ -42,11 +42,11 @@ func ExampleRequest_SetChecksum() {
 	if err != nil {
 		panic(err)
 	}
-	req.SetChecksum(sha256.New(), sum, true)
+	req.X设置完成后效验(sha256.New(), sum, true)
 
 // 下载并验证文件
-	resp := DefaultClient.Do(req)
-	if err := resp.Err(); err != nil {
+	resp := X默认全局客户端.X下载(req)
+	if err := resp.X等待错误(); err != nil {
 		panic(err)
 	}
 }

@@ -39,7 +39,7 @@ func TestGet(t *testing.T) {
 	filename := ".testGet"
 	defer os.Remove(filename)
 	grabtest.WithTestServer(t, func(url string) {
-		resp, err := Get(filename, url)
+		resp, err := X下载(filename, url)
 		if err != nil {
 			t.Fatalf("error in Get(): %v", err)
 		}
@@ -49,25 +49,25 @@ func TestGet(t *testing.T) {
 
 func ExampleGet() {
 // 下载文件到 /tmp 目录
-	resp, err := Get("/tmp", "http://example.com/example.zip")
+	resp, err := X下载("/tmp", "http://example.com/example.zip")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Download saved to", resp.Filename)
+	fmt.Println("Download saved to", resp.X文件名)
 }
 
-func mustNewRequest(dst, urlStr string) *Request {
-	req, err := NewRequest(dst, urlStr)
+func mustNewRequest(dst, urlStr string) *X下载参数 {
+	req, err := X生成下载参数(dst, urlStr)
 	if err != nil {
 		panic(err)
 	}
 	return req
 }
 
-func mustDo(req *Request) *Response {
-	resp := DefaultClient.Do(req)
-	if err := resp.Err(); err != nil {
+func mustDo(req *X下载参数) *X响应 {
+	resp := X默认全局客户端.X下载(req)
+	if err := resp.X等待错误(); err != nil {
 		panic(err)
 	}
 	return resp

@@ -42,29 +42,29 @@ func TestRateLimiter(t *testing.T) {
 		req := mustNewRequest(filename, url)
 
 // 确保通过每次下载8字节的方式多次访问速率限制器
-		req.BufferSize = 8
-		req.RateLimiter = lim
+		req.X缓冲区大小 = 8
+		req.X速率限制器 = lim
 
 		resp := mustDo(req)
 		testComplete(t, resp)
 		if lim.n != filesize {
 			t.Errorf("expected %d bytes to pass through limiter, got %d", filesize, lim.n)
 		}
-		if resp.Duration().Seconds() < 0.25 {
+		if resp.X取下载已持续时间().Seconds() < 0.25 {
 // BUG: 如果由于无关原因传输速度较慢，这个测试可能会通过
-			t.Errorf("expected transfer to take >250ms, took %v", resp.Duration())
+			t.Errorf("expected transfer to take >250ms, took %v", resp.X取下载已持续时间())
 		}
 	}, grabtest.ContentLength(filesize))
 }
 
 func ExampleRateLimiter() {
-	req, _ := NewRequest("", "http://www.golang-book.com/public/pdf/gobook.pdf")
+	req, _ := X生成下载参数("", "http://www.golang-book.com/public/pdf/gobook.pdf")
 
 // 绑定一个1Mbps的限速器，类似于来自golang.org/x/time/rate包中的令牌桶实现。
-	req.RateLimiter = NewLimiter(1048576)
+	req.X速率限制器 = NewLimiter(1048576)
 
-	resp := DefaultClient.Do(req)
-	if err := resp.Err(); err != nil {
+	resp := X默认全局客户端.X下载(req)
+	if err := resp.X等待错误(); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -59,12 +59,12 @@ func guessFilename(resp *http.Response) (string, error) {
 
 	// sanitize
 	if filename == "" || strings.HasSuffix(filename, "/") || strings.Contains(filename, "\x00") {
-		return "", ErrNoFilename
+		return "", ERR_无法确定文件名
 	}
 
 	filename = filepath.Base(path.Clean("/" + filename))
 	if filename == "" || filename == "." || filename == "/" {
-		return "", ErrNoFilename
+		return "", ERR_无法确定文件名
 	}
 
 	return filename, nil

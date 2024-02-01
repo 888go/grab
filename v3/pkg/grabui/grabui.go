@@ -11,10 +11,10 @@ func GetBatch(
 	workers int,
 	dst string,
 	urlStrs ...string,
-) (<-chan *下载类.Response, error) {
-	reqs := make([]*下载类.Request, len(urlStrs))
+) (<-chan *下载类.X响应, error) {
+	reqs := make([]*下载类.X下载参数, len(urlStrs))
 	for i := 0; i < len(urlStrs); i++ {
-		req, err := 下载类.NewRequest(dst, urlStrs[i])
+		req, err := 下载类.X生成下载参数(dst, urlStrs[i])
 		if err != nil {
 			return nil, err
 		}
@@ -22,6 +22,6 @@ func GetBatch(
 		reqs[i] = req
 	}
 
-	ui := NewConsoleClient(下载类.DefaultClient)
+	ui := NewConsoleClient(下载类.X默认全局客户端)
 	return ui.Do(ctx, workers, reqs...), nil
 }

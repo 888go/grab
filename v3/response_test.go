@@ -10,36 +10,36 @@ import (
 )
 
 // testComplete 验证已完成的 Response 是否包含所有期望的字段。
-func testComplete(t *testing.T, resp *Response) {
+func testComplete(t *testing.T, resp *X响应) {
 	<-resp.Done
-	if !resp.IsComplete() {
+	if !resp.X是否已完成() {
 		t.Errorf("Response.IsComplete returned false")
 	}
 
-	if resp.Start.IsZero() {
+	if resp.X传输开始时间.IsZero() {
 		t.Errorf("Response.Start is zero")
 	}
 
-	if resp.End.IsZero() {
+	if resp.X传输完成时间.IsZero() {
 		t.Error("Response.End is zero")
 	}
 
-	if eta := resp.ETA(); eta != resp.End {
+	if eta := resp.X取估计完成时间(); eta != resp.X传输完成时间 {
 		t.Errorf("Response.ETA is not equal to Response.End: %v", eta)
 	}
 
 // 以下字段仅在未发生错误时才应设置
-	if resp.Err() == nil {
-		if resp.Filename == "" {
+	if resp.X等待错误() == nil {
+		if resp.X文件名 == "" {
 			t.Errorf("Response.Filename is empty")
 		}
 
-		if resp.Size() == 0 {
+		if resp.X取总字节() == 0 {
 			t.Error("Response.Size is zero")
 		}
 
-		if p := resp.Progress(); p != 1.00 {
-			t.Errorf("Response.Progress returned %v (%v/%v bytes), expected 1", p, resp.BytesComplete(), resp.Size())
+		if p := resp.X取进度(); p != 1.00 {
+			t.Errorf("Response.Progress returned %v (%v/%v bytes), expected 1", p, resp.X已完成字节(), resp.X取总字节())
 		}
 	}
 }
@@ -55,14 +55,14 @@ func TestResponseProgress(t *testing.T) {
 	grabtest.WithTestServer(t, func(url string) {
 // 请求一个慢速传输
 		req := mustNewRequest(filename, url)
-		resp := DefaultClient.Do(req)
+		resp := X默认全局客户端.X下载(req)
 
 // 确保转账尚未开始
-		if resp.IsComplete() {
+		if resp.X是否已完成() {
 			t.Errorf("Transfer should not have started")
 		}
 
-		if p := resp.Progress(); p != 0 {
+		if p := resp.X取进度(); p != 0 {
 			t.Errorf("Transfer should not have started yet but progress is %v", p)
 		}
 
@@ -70,11 +70,11 @@ func TestResponseProgress(t *testing.T) {
 		<-resp.Done
 
 // 确保传输已完整完成
-		if p := resp.Progress(); p != 1 {
+		if p := resp.X取进度(); p != 1 {
 			t.Errorf("Transfer is complete but progress is %v", p)
 		}
 
-		if s := resp.BytesComplete(); s != int64(size) {
+		if s := resp.X已完成字节(); s != int64(size) {
 			t.Errorf("Expected to transfer %v bytes, got %v", size, s)
 		}
 	},
@@ -86,7 +86,7 @@ func TestResponseProgress(t *testing.T) {
 func TestResponseOpen(t *testing.T) {
 	grabtest.WithTestServer(t, func(url string) {
 		resp := mustDo(mustNewRequest("", url+"/someFilename"))
-		f, err := resp.Open()
+		f, err := resp.X等待完成后打开文件()
 		if err != nil {
 			t.Error(err)
 			return
@@ -103,7 +103,7 @@ func TestResponseOpen(t *testing.T) {
 func TestResponseBytes(t *testing.T) {
 	grabtest.WithTestServer(t, func(url string) {
 		resp := mustDo(mustNewRequest("", url+"/someFilename"))
-		b, err := resp.Bytes()
+		b, err := resp.X等待完成后取字节集()
 		if err != nil {
 			t.Error(err)
 			return

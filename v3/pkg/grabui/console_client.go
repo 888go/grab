@@ -14,7 +14,7 @@ type ConsoleClient struct {
 	mu                            sync.Mutex
 	client                        *下载类.Client
 	succeeded, failed, inProgress int
-	responses                     []*下载类.Response
+	responses                     []*下载类.X响应
 }
 
 func NewConsoleClient(client *下载类.Client) *ConsoleClient {
@@ -26,10 +26,10 @@ func NewConsoleClient(client *下载类.Client) *ConsoleClient {
 func (c *ConsoleClient) Do(
 	ctx context.Context,
 	workers int,
-	reqs ...*下载类.Request,
-) <-chan *下载类.Response {
+	reqs ...*下载类.X下载参数,
+) <-chan *下载类.X响应 {
 // 缓冲区大小防止慢速接收者造成回压
-	pump := make(chan *下载类.Response, len(reqs))
+	pump := make(chan *下载类.X响应, len(reqs))
 
 	go func() {
 		c.mu.Lock()
@@ -38,13 +38,13 @@ func (c *ConsoleClient) Do(
 		c.failed = 0
 		c.inProgress = 0
 		c.succeeded = 0
-		c.responses = make([]*下载类.Response, 0, len(reqs))
+		c.responses = make([]*下载类.X响应, 0, len(reqs))
 		if c.client == nil {
-			c.client = 下载类.DefaultClient
+			c.client = 下载类.X默认全局客户端
 		}
 
 		fmt.Printf("Downloading %d files...\n", len(reqs))
-		respch := c.client.DoBatch(workers, reqs...)
+		respch := c.client.X多线程下载(workers, reqs...)
 		t := time.NewTicker(200 * time.Millisecond)
 		defer t.Stop()
 
@@ -91,19 +91,19 @@ func (c *ConsoleClient) refresh() {
 
 // 打印新完成的下载内容
 	for i, resp := range c.responses {
-		if resp != nil && resp.IsComplete() {
-			if resp.Err() != nil {
+		if resp != nil && resp.X是否已完成() {
+			if resp.X等待错误() != nil {
 				c.failed++
 				fmt.Fprintf(os.Stderr, "Error downloading %s: %v\n",
-					resp.Request.URL(),
-					resp.Err())
+					resp.X下载参数.X取下载链接(),
+					resp.X等待错误())
 			} else {
 				c.succeeded++
 				fmt.Printf("Finished %s %s / %s (%d%%)\n",
-					resp.Filename,
-					byteString(resp.BytesComplete()),
-					byteString(resp.Size()),
-					int(100*resp.Progress()))
+					resp.X文件名,
+					byteString(resp.X已完成字节()),
+					byteString(resp.X取总字节()),
+					int(100*resp.X取进度()))
 			}
 			c.responses[i] = nil
 		}
@@ -114,12 +114,12 @@ func (c *ConsoleClient) refresh() {
 	for _, resp := range c.responses {
 		if resp != nil {
 			fmt.Printf("Downloading %s %s / %s (%d%%) - %s ETA: %s \033[K\n",
-				resp.Filename,
-				byteString(resp.BytesComplete()),
-				byteString(resp.Size()),
-				int(100*resp.Progress()),
-				bpsString(resp.BytesPerSecond()),
-				etaString(resp.ETA()))
+				resp.X文件名,
+				byteString(resp.X已完成字节()),
+				byteString(resp.X取总字节()),
+				int(100*resp.X取进度()),
+				bpsString(resp.X取每秒字节()),
+				etaString(resp.X取估计完成时间()))
 			c.inProgress++
 		}
 	}

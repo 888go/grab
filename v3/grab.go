@@ -10,14 +10,14 @@ import (
 // 若因客户端策略（例如CheckRedirect）导致错误，或者发生HTTP协议错误或IO错误，将会返回错误。
 //
 // 对于非阻塞调用，或需要控制HTTP客户端头信息、重定向策略和其他设置的情况，请创建一个Client实例代替。
-func Get(dst, urlStr string) (*Response, error) {
-	req, err := NewRequest(dst, urlStr)
+func X下载(保存目录, 下载链接 string) (*X响应, error) {
+	req, err := X生成下载参数(保存目录, 下载链接)
 	if err != nil {
 		return nil, err
 	}
 
-	resp := DefaultClient.Do(req)
-	return resp, resp.Err()
+	resp := X默认全局客户端.X下载(req)
+	return resp, resp.X等待错误()
 }
 
 // GetBatch 发送多个 HTTP 请求，并使用指定数量的并发工作 goroutine 将请求的 URL 内容下载到给定的目标目录。
@@ -29,24 +29,24 @@ func Get(dst, urlStr string) (*Response, error) {
 // 如果在任何下载过程中发生错误，可以通过调用相关的 Response.Err 来获取该错误信息。
 //
 // 如果需要控制 HTTP 客户端头、重定向策略以及其他设置，请创建一个 Client 对象来代替。
-func GetBatch(workers int, dst string, urlStrs ...string) (<-chan *Response, error) {
-	fi, err := os.Stat(dst)
+func X多线程下载(线程数 int, 保存目录 string, 下载链接 ...string) (<-chan *X响应, error) {
+	fi, err := os.Stat(保存目录)
 	if err != nil {
 		return nil, err
 	}
 	if !fi.IsDir() {
-		return nil, fmt.Errorf("destination is not a directory")
+		return nil, fmt.Errorf("Destination不是目录")
 	}
 
-	reqs := make([]*Request, len(urlStrs))
-	for i := 0; i < len(urlStrs); i++ {
-		req, err := NewRequest(dst, urlStrs[i])
+	reqs := make([]*X下载参数, len(下载链接))
+	for i := 0; i < len(下载链接); i++ {
+		req, err := X生成下载参数(保存目录, 下载链接[i])
 		if err != nil {
 			return nil, err
 		}
 		reqs[i] = req
 	}
 
-	ch := DefaultClient.DoBatch(workers, reqs...)
+	ch := X默认全局客户端.X多线程下载(线程数, reqs...)
 	return ch, nil
 }
