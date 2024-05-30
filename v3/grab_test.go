@@ -1,4 +1,4 @@
-package 下载类
+package grab
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 
 func TestMain(m *testing.M) {
 	os.Exit(func() int {
-// 切换到临时目录，以便下载到当前工作目录的测试文件能够被隔离并清理掉
+		// chdir to temp so test files downloaded to pwd are isolated and cleaned up
 		cwd, err := os.Getwd()
 		if err != nil {
 			panic(err)
@@ -34,12 +34,12 @@ func TestMain(m *testing.M) {
 	}())
 }
 
-// TestGet 测试 grab.Get 功能
+// TestGet tests grab.Get
 func TestGet(t *testing.T) {
 	filename := ".testGet"
 	defer os.Remove(filename)
 	grabtest.WithTestServer(t, func(url string) {
-		resp, err := X下载(filename, url)
+		resp, err := Get(filename, url)
 		if err != nil {
 			t.Fatalf("error in Get(): %v", err)
 		}
@@ -48,26 +48,26 @@ func TestGet(t *testing.T) {
 }
 
 func ExampleGet() {
-// 下载文件到 /tmp 目录
-	resp, err := X下载("/tmp", "http://example.com/example.zip")
+	// download a file to /tmp
+	resp, err := Get("/tmp", "http://example.com/example.zip")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Download saved to", resp.X文件名)
+	fmt.Println("Download saved to", resp.Filename)
 }
 
-func mustNewRequest(dst, urlStr string) *X下载参数 {
-	req, err := X生成下载参数(dst, urlStr)
+func mustNewRequest(dst, urlStr string) *Request {
+	req, err := NewRequest(dst, urlStr)
 	if err != nil {
 		panic(err)
 	}
 	return req
 }
 
-func mustDo(req *X下载参数) *X响应 {
-	resp := X默认全局客户端.X下载(req)
-	if err := resp.X等待错误(); err != nil {
+func mustDo(req *Request) *Response {
+	resp := DefaultClient.Do(req)
+	if err := resp.Err(); err != nil {
 		panic(err)
 	}
 	return resp

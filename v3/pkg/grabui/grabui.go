@@ -6,15 +6,17 @@ import (
 	"github.com/cavaliergopher/grab/v3"
 )
 
+
+// ff:
 func GetBatch(
 	ctx context.Context,
 	workers int,
 	dst string,
 	urlStrs ...string,
-) (<-chan *下载类.X响应, error) {
-	reqs := make([]*下载类.X下载参数, len(urlStrs))
+) (<-chan *grab.Response, error) {
+	reqs := make([]*grab.Request, len(urlStrs))
 	for i := 0; i < len(urlStrs); i++ {
-		req, err := 下载类.X生成下载参数(dst, urlStrs[i])
+		req, err := grab.NewRequest(dst, urlStrs[i])
 		if err != nil {
 			return nil, err
 		}
@@ -22,6 +24,6 @@ func GetBatch(
 		reqs[i] = req
 	}
 
-	ui := NewConsoleClient(下载类.X默认全局客户端)
+	ui := NewConsoleClient(grab.DefaultClient)
 	return ui.Do(ctx, workers, reqs...), nil
 }

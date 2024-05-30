@@ -1,4 +1,4 @@
-package 下载类
+package grab
 
 import (
 	"bytes"
@@ -11,78 +11,94 @@ import (
 	"time"
 )
 
-// Response 表示已完成或正在进行的下载请求的响应。
+// Response represents the response to a completed or in-progress download
+// request.
 //
-// 即使在远程服务器接收到 HTTP 响应，但内容尚未开始传输时，也可能返回一个响应。
+// A response may be returned as soon a HTTP response is received from a remote
+// server, but before the body content has started transferring.
 //
-// 所有 Response 方法调用都是线程安全的。
-type X响应 struct {
-// 该Response所对应的请求。
-	X下载参数 *X下载参数
+// All Response method calls are thread-safe.
+type Response struct {
+	// The Request that was submitted to obtain this Response.
+	Request *Request //qm:下载参数 cz:Request *     
 
-// HTTPResponse 代表从 HTTP 请求中接收到的 HTTP 响应。
-//
-// 不应使用响应体（response Body），因为它将被 grab 消耗并关闭。
-	HTTP响应 *http.Response
+	// HTTPResponse represents the HTTP response received from an HTTP request.
+	//
+	// The response Body should not be used as it will be consumed and closed by
+	// grab.
+	HTTPResponse *http.Response //qm:HTTP响应 cz:HTTPResponse *http.Response     
 
-// Filename 指定文件传输在本地存储中的保存路径。
-	X文件名 string
+	// Filename specifies the path where the file transfer is stored in local
+	// storage.
+	Filename string //qm:文件名 cz:Filename string     
 
-// Size 指定文件传输的预期总大小。
+	// Size specifies the total expected size of the file transfer.
 	sizeUnsafe int64
 
-// Start 指定文件传输开始的时间。
-	X传输开始时间 time.Time
+	// Start specifies the time at which the file transfer started.
+	Start time.Time //qm:传输开始时间 cz:Start time.Time     
 
-// End 指定文件传输完成的时间。
-//
-// 在传输尚未完成时，此属性将返回零值。
-	X传输完成时间 time.Time
+	// End specifies the time at which the file transfer completed.
+	//
+	// This will return zero until the transfer has completed.
+	End time.Time //qm:传输完成时间 cz:End time.Time     
 
-// CanResume 指定远程服务器声明它可以恢复先前的下载，因为已设置了 'Accept-Ranges: bytes' 头部。
+	// CanResume specifies that the remote server advertised that it can resume
+	// previous downloads, as the 'Accept-Ranges: bytes' header is set.
 	CanResume bool
 
-// DidResume 指定文件传输恢复了先前未完成的传输。
+	// DidResume specifies that the file transfer resumed a previously incomplete
+	// transfer.
 	DidResume bool
 
-// Done 在传输完成（无论成功或出现错误）后关闭。通过 Response.Err 可获取错误信息
+	// Done is closed once the transfer is finalized, either successfully or with
+	// errors. Errors are available via Response.Err
 	Done chan struct{}
 
-// ctx 是一个 Context，用于控制正在进行的传输的取消
+	// ctx is a Context that controls cancelation of an inprogress transfer
 	ctx context.Context
 
-// cancel 是一个取消函数，可用于取消此 Response 的上下文。
+	// cancel is a cancel func that can be used to cancel the context of this
+	// Response.
 	cancel context.CancelFunc
 
-// fi 是目标文件在传输开始前（如果已经存在）的 FileInfo 信息。
+	// fi is the FileInfo for the destination file if it already existed before
+	// transfer started.
 	fi os.FileInfo
 
-// optionsKnown 表示已完成 HEAD 请求，并且已知远程服务器的功能。
+	// optionsKnown indicates that a HEAD request has been completed and the
+	// capabilities of the remote server are known.
 	optionsKnown bool
 
-// writer 是用于将下载的文件写入本地存储的文件句柄
+	// writer is the file handle used to write the downloaded file to local
+	// storage
 	writer io.Writer
 
-// storeBuffer 如果 Request.NoStore 被启用，则接收传输的内容。
+	// storeBuffer receives the contents of the transfer if Request.NoStore is
+	// enabled.
 	storeBuffer bytes.Buffer
 
-// bytesCompleted 指定在这次传输开始之前已经完成传输的字节数。
+	// bytesCompleted specifies the number of bytes which were already
+	// transferred before this transfer began.
 	bytesResumed int64
 
-// transfer 负责从远程服务器复制数据到本地文件，
-// 并跟踪进度以及允许取消操作。
+	// transfer is responsible for copying data from the remote server to a local
+	// file, tracking progress and allowing for cancelation.
 	transfer *transfer
 
-// bufferSize 指定了传输缓冲区的大小（以字节为单位）。
+	// bufferSize specifies the size in bytes of the transfer buffer.
 	bufferSize int
 
-// Error 包含了文件传输过程中可能出现的任何错误。
-// 请在 IsComplete 返回 true 之前不要读取此内容。
+	// Error contains any error that may have occurred during the file transfer.
+	// This should not be read until IsComplete returns true.
 	err error
 }
 
-// IsComplete 返回一个布尔值，如果下载已完成则返回true。如果在下载过程中发生错误，可以通过 Err 返回该错误。
-func (c *X响应) X是否已完成() bool {
+// IsComplete returns true if the download has completed. If an error occurred
+// during the download, it can be returned via Err.
+
+// ff:是否已完成
+func (c *Response) IsComplete() bool {
 	select {
 	case <-c.Done:
 		return true
@@ -91,107 +107,145 @@ func (c *X响应) X是否已完成() bool {
 	}
 }
 
-// Cancel 取消文件传输，通过取消此 Response 对应的基础 Context 来实现。Cancel 会阻塞直到传输关闭并返回任何错误——通常是 context.Canceled。
-func (c *X响应) X取消() error {
+// Cancel cancels the file transfer by canceling the underlying Context for
+// this Response. Cancel blocks until the transfer is closed and returns any
+// error - typically context.Canceled.
+
+// ff:取消
+func (c *Response) Cancel() error {
 	c.cancel()
-	return c.X等待错误()
+	return c.Err()
 }
 
-// Wait会阻塞直到下载完成。
-func (c *X响应) X等待完成() {
+// Wait blocks until the download is completed.
+
+// ff:等待完成
+func (c *Response) Wait() {
 	<-c.Done
 }
 
-// Err 阻塞调用该方法的 goroutine，直到底层文件传输完成，并返回在此期间可能发生的任何错误。如果下载已经完成，Err 将立即返回。
-func (c *X响应) X等待错误() error {
+// Err blocks the calling goroutine until the underlying file transfer is
+// completed and returns any error that may have occurred. If the download is
+// already completed, Err returns immediately.
+
+// ff:等待错误
+func (c *Response) Err() error {
 	<-c.Done
 	return c.err
 }
 
-// Size 返回文件传输的大小。如果远程服务器没有指定总大小，并且传输未完成，则返回值为-1。
-func (c *X响应) X取总字节() int64 {
+// Size returns the size of the file transfer. If the remote server does not
+// specify the total size and the transfer is incomplete, the return value is
+// -1.
+
+// ff:取总字节
+func (c *Response) Size() int64 {
 	return atomic.LoadInt64(&c.sizeUnsafe)
 }
 
-// BytesComplete 返回已复制到目标位置的总字节数，包括从先前下载恢复的所有字节。
-func (c *X响应) X已完成字节() int64 {
+// BytesComplete returns the total number of bytes which have been copied to
+// the destination, including any bytes that were resumed from a previous
+// download.
+
+// ff:已完成字节
+func (c *Response) BytesComplete() int64 {
 	return c.bytesResumed + c.transfer.N()
 }
 
-// BytesPerSecond 返回过去五秒钟内通过简单移动平均计算出的每秒传输字节数。如果下载已经完成，则返回整个下载过程中平均的每秒字节数。
-func (c *X响应) X取每秒字节() float64 {
-	if c.X是否已完成() {
-		return float64(c.transfer.N()) / c.X取下载已持续时间().Seconds()
+// BytesPerSecond returns the number of bytes per second transferred using a
+// simple moving average of the last five seconds. If the download is already
+// complete, the average bytes/sec for the life of the download is returned.
+
+// ff:取每秒字节
+func (c *Response) BytesPerSecond() float64 {
+	if c.IsComplete() {
+		return float64(c.transfer.N()) / c.Duration().Seconds()
 	}
 	return c.transfer.BPS()
 }
 
-// Progress 返回已下载总字节的比例。将返回的值乘以100可得到完成的百分比。
-func (c *X响应) X取进度() float64 {
-	size := c.X取总字节()
+// Progress returns the ratio of total bytes that have been downloaded. Multiply
+// the returned value by 100 to return the percentage completed.
+
+// ff:取进度
+func (c *Response) Progress() float64 {
+	size := c.Size()
 	if size <= 0 {
 		return 0
 	}
-	return float64(c.X已完成字节()) / float64(size)
+	return float64(c.BytesComplete()) / float64(size)
 }
 
-// Duration 返回文件传输的持续时间。如果传输正在进行中，
-// 持续时间将是从现在到传输开始之间的时间差。如果传输已完成，
-// 持续时间将是整个完成传输过程从开始到结束的时间差。
-func (c *X响应) X取下载已持续时间() time.Duration {
-	if c.X是否已完成() {
-		return c.X传输完成时间.Sub(c.X传输开始时间)
+// Duration returns the duration of a file transfer. If the transfer is in
+// process, the duration will be between now and the start of the transfer. If
+// the transfer is complete, the duration will be between the start and end of
+// the completed transfer process.
+
+// ff:取下载已持续时间
+func (c *Response) Duration() time.Duration {
+	if c.IsComplete() {
+		return c.End.Sub(c.Start)
 	}
 
-	return time.Now().Sub(c.X传输开始时间)
+	return time.Now().Sub(c.Start)
 }
 
-// ETA 返回根据当前每秒字节数估算的下载完成时间。如果传输已完成，将返回实际结束时间。
-func (c *X响应) X取估计完成时间() time.Time {
-	if c.X是否已完成() {
-		return c.X传输完成时间
+// ETA returns the estimated time at which the the download will complete, given
+// the current BytesPerSecond. If the transfer has already completed, the actual
+// end time will be returned.
+
+// ff:取估计完成时间
+func (c *Response) ETA() time.Time {
+	if c.IsComplete() {
+		return c.End
 	}
-	bt := c.X已完成字节()
+	bt := c.BytesComplete()
 	bps := c.transfer.BPS()
 	if bps == 0 {
 		return time.Time{}
 	}
-	secs := float64(c.X取总字节()-bt) / bps
+	secs := float64(c.Size()-bt) / bps
 	return time.Now().Add(time.Duration(secs) * time.Second)
 }
 
-// Open 将阻塞调用的 goroutine，直到底层文件传输完成，然后打开已传输的文件以供读取。
-// 如果启用了 Request.NoStore，则读取器将从内存中读取数据。
+// Open blocks the calling goroutine until the underlying file transfer is
+// completed and then opens the transferred file for reading. If Request.NoStore
+// was enabled, the reader will read from memory.
 //
-// 如果在传输过程中发生错误，将会返回该错误。
+// If an error occurred during the transfer, it will be returned.
 //
-// 调用者有责任关闭返回的文件句柄。
-func (c *X响应) X等待完成后打开文件() (io.ReadCloser, error) {
-	if err := c.X等待错误(); err != nil {
+// It is the callers responsibility to close the returned file handle.
+
+// ff:等待完成后打开文件
+func (c *Response) Open() (io.ReadCloser, error) {
+	if err := c.Err(); err != nil {
 		return nil, err
 	}
 	return c.openUnsafe()
 }
 
-func (c *X响应) openUnsafe() (io.ReadCloser, error) {
-	if c.X下载参数.X不写入本地文件系统 {
+func (c *Response) openUnsafe() (io.ReadCloser, error) {
+	if c.Request.NoStore {
 		return ioutil.NopCloser(bytes.NewReader(c.storeBuffer.Bytes())), nil
 	}
-	return os.Open(c.X文件名)
+	return os.Open(c.Filename)
 }
 
-// Bytes 阻塞调用它的 goroutine，直到底层文件传输完成，然后从已完成的传输中读取所有字节。
-// 如果启用了 Request.NoStore，则字节将从内存中读取。
+// Bytes blocks the calling goroutine until the underlying file transfer is
+// completed and then reads all bytes from the completed tranafer. If
+// Request.NoStore was enabled, the bytes will be read from memory.
 //
-// 如果在传输过程中发生错误，将会返回该错误。
-func (c *X响应) X等待完成后取字节集() ([]byte, error) {
-	if err := c.X等待错误(); err != nil {
+// If an error occurred during the transfer, it will be returned.
+
+// ff:等待完成后取字节集
+func (c *Response) Bytes() ([]byte, error) {
+	if err := c.Err(); err != nil {
 		return nil, err
 	}
-	if c.X下载参数.X不写入本地文件系统 {
+	if c.Request.NoStore {
 		return c.storeBuffer.Bytes(), nil
 	}
-	f, err := c.X等待完成后打开文件()
+	f, err := c.Open()
 	if err != nil {
 		return nil, err
 	}
@@ -199,30 +253,30 @@ func (c *X响应) X等待完成后取字节集() ([]byte, error) {
 	return ioutil.ReadAll(f)
 }
 
-func (c *X响应) requestMethod() string {
-	if c == nil || c.HTTP响应 == nil || c.HTTP响应.Request == nil {
+func (c *Response) requestMethod() string {
+	if c == nil || c.HTTPResponse == nil || c.HTTPResponse.Request == nil {
 		return ""
 	}
-	return c.HTTP响应.Request.Method
+	return c.HTTPResponse.Request.Method
 }
 
-func (c *X响应) checksumUnsafe() ([]byte, error) {
+func (c *Response) checksumUnsafe() ([]byte, error) {
 	f, err := c.openUnsafe()
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
-	t := newTransfer(c.X下载参数.I取上下文(), nil, c.X下载参数.hash, f, nil)
+	t := newTransfer(c.Request.Context(), nil, c.Request.hash, f, nil)
 	if _, err = t.copy(); err != nil {
 		return nil, err
 	}
-	sum := c.X下载参数.hash.Sum(nil)
+	sum := c.Request.hash.Sum(nil)
 	return sum, nil
 }
 
-func (c *X响应) closeResponseBody() error {
-	if c.HTTP响应 == nil || c.HTTP响应.Body == nil {
+func (c *Response) closeResponseBody() error {
+	if c.HTTPResponse == nil || c.HTTPResponse.Body == nil {
 		return nil
 	}
-	return c.HTTP响应.Body.Close()
+	return c.HTTPResponse.Body.Close()
 }

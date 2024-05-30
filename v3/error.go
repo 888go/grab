@@ -1,4 +1,4 @@
-package 下载类
+package grab
 
 import (
 	"errors"
@@ -7,32 +7,41 @@ import (
 )
 
 var (
-// ErrBadLength 表示服务器响应或已存在的文件内容长度与预期的不匹配。
-	ERR_文件长度不匹配 = errors.New("文件长度不匹配")
+	// ErrBadLength indicates that the server response or an existing file does
+	// not match the expected content length.
+	ErrBadLength = errors.New("bad content length") //qm:ERR_文件长度不匹配 cz:ErrBadLength = errors.New     
 
-// ErrBadChecksum 表示下载的文件未能通过校验和验证。
-	ERR_文件校验失败 = errors.New("文件校验失败")
+	// ErrBadChecksum indicates that a downloaded file failed to pass checksum
+	// validation.
+	ErrBadChecksum = errors.New("checksum mismatch") //qm:ERR_文件校验失败 cz:ErrBadChecksum = errors.New     
 
-// ErrNoFilename 表示无法通过 URL 或服务器响应头自动生成一个合理的文件名。
-	ERR_无法确定文件名 = errors.New("无法确定文件名")
+	// ErrNoFilename indicates that a reasonable filename could not be
+	// automatically determined using the URL or response headers from a server.
+	ErrNoFilename = errors.New("no filename could be determined") //qm:ERR_无法确定文件名 cz:ErrNoFilename = errors.New     
 
-// ErrNoTimestamp 表示无法通过远程服务器响应头自动确定时间戳。
-	ERR_无法确定时间戳 = errors.New("无法确定时间戳")
+	// ErrNoTimestamp indicates that a timestamp could not be automatically
+	// determined using the response headers from the remote server.
+	ErrNoTimestamp = errors.New("no timestamp could be determined for the remote file") //qm:ERR_无法确定时间戳 cz:ErrNoTimestamp = errors.New     
 
-// ErrFileExists 表示目标路径已存在。
-	ERR_文件已存在 = errors.New("file exists")
+	// ErrFileExists indicates that the destination path already exists.
+	ErrFileExists = errors.New("file exists") //qm:ERR_文件已存在 cz:ErrFileExists = errors.New     
 )
 
-// StatusCodeError 表示服务器响应的状态码不在 200-299 范围内（在跟随所有重定向之后）。
-// 注：此注释描述了一个Go语言错误类型，当HTTP请求的最终状态码不在成功范围（200-299）内时，会返回这个错误。
-type X状态码错误 int
+// StatusCodeError indicates that the server response had a status code that
+// was not in the 200-299 range (after following any redirects).
+type StatusCodeError int
 
-func (错误 X状态码错误) Error() string {
-	return fmt.Sprintf("服务器返回%d %s", 错误, http.StatusText(int(错误)))
+
+// ff:
+func (err StatusCodeError) Error() string {
+	return fmt.Sprintf("server returned %d %s", err, http.StatusText(int(err)))
 }
 
-// IsStatusCodeError 判断给定的错误是否为 StatusCodeError 类型，如果是则返回 true。
-func X是否为状态码错误(错误 error) bool {
-	_, ok := 错误.(X状态码错误)
+// IsStatusCodeError returns true if the given error is of type StatusCodeError.
+
+// ff:是否为状态码错误
+// err:错误
+func IsStatusCodeError(err error) bool {
+	_, ok := err.(StatusCodeError)
 	return ok
 }

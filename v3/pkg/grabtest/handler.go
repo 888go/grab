@@ -31,6 +31,9 @@ type handler struct {
 	rateLimiter        *time.Ticker
 }
 
+
+// ff:
+// options:
 func NewHandler(options ...HandlerOption) (http.Handler, error) {
 	h := &handler{
 		statusCodeFunc:  func(req *http.Request) int { return http.StatusOK },
@@ -46,6 +49,12 @@ func NewHandler(options ...HandlerOption) (http.Handler, error) {
 	return h, nil
 }
 
+
+// ff:
+// options:
+// f:
+// url:
+// t:
 func WithTestServer(t *testing.T, f func(url string), options ...HandlerOption) {
 	h, err := NewHandler(options...)
 	if err != nil {
@@ -66,13 +75,17 @@ func (h *handler) close() {
 	}
 }
 
+
+// ff:
+// r:
+// w:
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// delay response
 	if h.ttfb > 0 {
 		time.Sleep(h.ttfb)
 	}
 
-// 验证请求方法
+	// validate request method
 	allowed := false
 	for _, m := range h.methodWhitelist {
 		if r.Method == m {
@@ -85,12 +98,12 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-// 设置服务器选项
+	// set server options
 	if h.acceptRanges {
 		w.Header().Set("Accept-Ranges", "bytes")
 	}
 
-// 设置附件文件名
+	// set attachment filename
 	if h.attachmentFilename != "" {
 		w.Header().Set(
 			"Content-Disposition",
@@ -98,14 +111,14 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-// 设置最后修改时间戳
+	// set last modified timestamp
 	lastMod := time.Now()
 	if !h.lastModified.IsZero() {
 		lastMod = h.lastModified
 	}
 	w.Header().Set("Last-Modified", lastMod.Format(http.TimeFormat))
 
-// 设置内容长度
+	// set content-length
 	offset := 0
 	if h.acceptRanges {
 		if reqRange := r.Header.Get("Range"); reqRange != "" {
@@ -121,23 +134,23 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", h.contentLength-offset))
 
-// 应用头部黑名单
+	// apply header blacklist
 	for _, key := range h.headerBlacklist {
 		w.Header().Del(key)
 	}
 
-// 发送头部和状态码
+	// send header and status code
 	w.WriteHeader(h.statusCodeFunc(r))
 
 	// send body
 	if r.Method == "GET" {
-// 使用带缓冲的I/O以减少对读取器的开销
+		// use buffered io to reduce overhead on the reader
 		bw := bufio.NewWriterSize(w, 4096)
 		for i := offset; !isRequestClosed(r) && i < h.contentLength; i++ {
 			bw.Write([]byte{byte(i)})
 			if h.rateLimiter != nil {
 				bw.Flush()
-				w.(http.Flusher).Flush() // 强制服务器将数据发送到客户端
+				w.(http.Flusher).Flush() // force the server to send the data to the client
 				select {
 				case <-h.rateLimiter.C:
 				case <-r.Context().Done():
@@ -150,7 +163,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// isRequestClosed 返回 true，如果客户端请求已被取消。
+// isRequestClosed returns true if the client request has been canceled.
 func isRequestClosed(r *http.Request) bool {
 	return r.Context().Err() != nil
 }

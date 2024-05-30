@@ -1,4 +1,4 @@
-package 下载类
+package grab
 
 import (
 	"fmt"
@@ -50,8 +50,8 @@ func TestURLFilenames(t *testing.T) {
 				req, err := http.NewRequest("GET", tc, nil)
 				if err != nil {
 					if tc == "http://test.com/filename\x00" {
-// 自从 go1.12 版本开始，含有无效控制字符的 URL 会返回错误
-// 参考：https://github.com/golang/go/commit/829c5df58694b3345cb5ea41206783c8ccf5c3ca
+						// Since go1.12, urls with invalid control character return an error
+						// See https://github.com/golang/go/commit/829c5df58694b3345cb5ea41206783c8ccf5c3ca
 						t.Skip()
 					}
 				}
@@ -60,8 +60,8 @@ func TestURLFilenames(t *testing.T) {
 				}
 
 				_, err = guessFilename(resp)
-				if err != ERR_无法确定文件名 {
-					t.Errorf("expected '%v', got '%v'", ERR_无法确定文件名, err)
+				if err != ErrNoFilename {
+					t.Errorf("expected '%v', got '%v'", ErrNoFilename, err)
 				}
 			})
 		}
@@ -109,10 +109,10 @@ func TestHeaderFilenames(t *testing.T) {
 		testCases := []string{
 			"",
 			"/",
-			//"."//2024-01-02此文件名在win平台不合理,
-			//"/."//2024-01-02此文件名在win平台不合理,
+			".",
+			"/.",
 			"/./",
-			//".."//2024-01-02此文件名在win平台不合理,
+			"..",
 			"../",
 			"/../",
 			"/path/",
@@ -120,13 +120,13 @@ func TestHeaderFilenames(t *testing.T) {
 			"filename\x00",
 			"filename/",
 			"filename//",
-			//"filename/.."//2024-01-02此文件名在win平台不合理,
+			"filename/..",
 		}
 
 		for _, tc := range testCases {
 			setFilename(resp, tc)
-			if actual, err := guessFilename(resp); err != ERR_无法确定文件名 {
-				t.Errorf("expected: %v (%v), got: %v (%v)", ERR_无法确定文件名, tc, err, actual)
+			if actual, err := guessFilename(resp); err != ErrNoFilename {
+				t.Errorf("expected: %v (%v), got: %v (%v)", ErrNoFilename, tc, err, actual)
 			}
 		}
 	})

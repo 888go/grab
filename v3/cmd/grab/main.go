@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-
 	"fmt"
 	"os"
 
@@ -10,7 +9,7 @@ import (
 )
 
 func main() {
-	// 验证命令参数
+	// validate command args
 	if len(os.Args) < 2 {
 		fmt.Fprintf(os.Stderr, "usage: %s url...\n", os.Args[0])
 		os.Exit(1)
@@ -24,10 +23,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	// 返回失败的下载数量作为退出代码
+	// return the number of failed downloads as exit code
 	failed := 0
 	for resp := range respch {
-		if resp.X等待错误() != nil {
+		if resp.Err() != nil {
 			failed++
 		}
 	}

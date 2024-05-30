@@ -1,4 +1,4 @@
-package 下载类
+package grab
 
 import (
 	"fmt"
@@ -11,12 +11,11 @@ import (
 	"time"
 )
 
-// setLastModified 根据远程服务器返回的 Last-Modified 头部信息，设置本地文件的最后修改时间戳。
+// setLastModified sets the last modified timestamp of a local file according to
+// the Last-Modified header returned by a remote server.
 func setLastModified(resp *http.Response, filename string) error {
-// 参考RFC 7232文档第2.2章节
-// 及MDN Web文档中关于HTTP Headers的Last-Modified部分
-// RFC 7232是HTTP/1.1协议中定义条件请求语义的标准，其中第2.2节详细说明了Last-Modified头部字段的用法。
-// MDN Web文档（Mozilla开发者网络）对HTTP Headers中的Last-Modified做了详细介绍，这是一个用于指示资源最后修改时间的HTTP头部字段。
+	// https://tools.ietf.org/html/rfc7232#section-2.2
+	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Last-Modified
 	header := resp.Header.Get("Last-Modified")
 	if header == "" {
 		return nil
@@ -28,7 +27,7 @@ func setLastModified(resp *http.Response, filename string) error {
 	return os.Chtimes(filename, lastmod, lastmod)
 }
 
-// mkdirp 为目标文件路径创建所有缺失的父级目录。
+// mkdirp creates all missing parent directories for the destination file path.
 func mkdirp(path string) error {
 	dir := filepath.Dir(path)
 	if fi, err := os.Stat(dir); err != nil {
@@ -44,27 +43,28 @@ func mkdirp(path string) error {
 	return nil
 }
 
-// guessFilename 为给定的http.Response返回一个文件名。如果无法确定文件名，则返回ErrNoFilename错误。
+// guessFilename returns a filename for the given http.Response. If none can be
+// determined ErrNoFilename is returned.
 //
-// TODO: 对于NoStore操作，不应要求提供文件名
+// TODO: NoStore operations should not require a filename
 func guessFilename(resp *http.Response) (string, error) {
 	filename := resp.Request.URL.Path
 	if cd := resp.Header.Get("Content-Disposition"); cd != "" {
 		if _, params, err := mime.ParseMediaType(cd); err == nil {
 			if val, ok := params["filename"]; ok {
 				filename = val
-			} // 如果filename指令缺失，则退回到URL.Path
+			} // else filename directive is missing.. fallback to URL.Path
 		}
 	}
 
 	// sanitize
 	if filename == "" || strings.HasSuffix(filename, "/") || strings.Contains(filename, "\x00") {
-		return "", ERR_无法确定文件名
+		return "", ErrNoFilename
 	}
 
 	filename = filepath.Base(path.Clean("/" + filename))
 	if filename == "" || filename == "." || filename == "/" {
-		return "", ERR_无法确定文件名
+		return "", ErrNoFilename
 	}
 
 	return filename, nil
