@@ -1,4 +1,4 @@
-package grab//bm:下载类
+package 下载类
 
 import (
 	"bytes"
@@ -13,45 +13,41 @@ import (
 	"time"
 )
 
-// HTTPClient provides an interface allowing us to perform HTTP requests.
+// HTTPClient 提供了一个接口，允许我们执行HTTP请求。 md5:4171bffd13d00b3a
 type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-// truncater is a private interface allowing different response
-// Writers to be truncated
+// truncater是一个私有接口，允许使用不同的响应写入器进行截断
+// md5:13b36272ac021c7d
 type truncater interface {
 	Truncate(size int64) error
 }
 
-// A Client is a file download client.
+// Client是一个文件下载客户端。
 //
-// Clients are safe for concurrent use by multiple goroutines.
+// 客户端是安全的，可以由多个goroutine并发使用。
+// md5:adb110330920265b
 type Client struct {
-	// HTTPClient specifies the http.Client which will be used for communicating
-	// with the remote server during the file transfer.
+// HTTPClient 指定了在文件传输过程中与远程服务器通信所使用的 http.Client。
+// md5:18f90ae2438c3d95
 	HTTPClient HTTPClient
 
-	// UserAgent specifies the User-Agent string which will be set in the
-	// headers of all requests made by this client.
-	//
-	// The user agent string may be overridden in the headers of each request.
-	UserAgent string //qm:HTTP_UA cz:UserAgent string     
+// UserAgent 指定将设置为此客户端的所有请求的头中的 User-Agent 字符串。
+//
+// 可以在每个请求的头中覆盖 User-Agent 字符串。
+// md5:416ff171bdbaf067
+	HTTP_UA string
 
-	// BufferSize specifies the size in bytes of the buffer that is used for
-	// transferring all requested files. Larger buffers may result in faster
-	// throughput but will use more memory and result in less frequent updates
-	// to the transfer progress statistics. The BufferSize of each request can
-	// be overridden on each Request object. Default: 32KB.
-	BufferSize int //qm:缓冲区大小 cz:BufferSize int     
+// BufferSize 指定了用于传输所有请求文件的缓冲区的大小（以字节为单位）。较大的缓冲区可能会提高吞吐量，但会消耗更多内存，并导致传输进度统计更新更不频繁。每个请求的BufferSize可以在每个Request对象上重写。默认值：32KB。
+// md5:76d8523deca24178
+	X缓冲区大小 int
 }
 
-// NewClient returns a new file download Client, using default configuration.
-
-// ff:创建客户端
-func NewClient() *Client {
+// NewClient 使用默认配置返回一个新的文件下载客户端。 md5:37b6062ca04f5dcf
+func X创建客户端() *Client {
 	return &Client{
-		UserAgent: "grab",
+		HTTP_UA: "grab",
 		HTTPClient: &http.Client{
 			Transport: &http.Transport{
 				Proxy: http.ProxyFromEnvironment,
@@ -60,103 +56,75 @@ func NewClient() *Client {
 	}
 }
 
-// DefaultClient is the default client and is used by all Get convenience
-// functions.
-var DefaultClient = NewClient()
+// DefaultClient 是默认客户端，所有 Get 方便函数都会使用它。
+// md5:3aee22c6e017f0f3
+var DefaultClient = X创建客户端()
 
-// Do sends a file transfer request and returns a file transfer response,
-// following policy (e.g. redirects, cookies, auth) as configured on the
-// client's HTTPClient.
-//
-// Like http.Get, Do blocks while the transfer is initiated, but returns as soon
-// as the transfer has started transferring in a background goroutine, or if it
-// failed early.
-//
-// An error is returned via Response.Err if caused by client policy (such as
-// CheckRedirect), or if there was an HTTP protocol or IO error. Response.Err
-// will block the caller until the transfer is completed, successfully or
-// otherwise.
-
-// ff:下载
-// req:下载参数
-func (c *Client) Do(req *Request) *Response {
-	// cancel will be called on all code-paths via closeResponse
-	ctx, cancel := context.WithCancel(req.Context())
-	req = req.WithContext(ctx)
+// Do 发送文件传输请求并返回一个文件传输响应，遵循客户端的HTTPClient配置（例如重定向、Cookie、身份验证等）。
+// 
+// 类似于http.Get，Do在启动传输时会阻塞，但一旦传输在后台goroutine中开始传输，或者在早期阶段失败，它就会立即返回。
+// 
+// 如果错误是由客户端策略（如CheckRedirect）引起的，或者存在HTTP协议或IO错误，将通过Response.Err返回错误。Response.Err会在传输完成，无论成功还是失败，都会阻塞调用者。
+// md5:45eff2a029f7d8e0
+func (c *Client) X下载(下载参数 *Request) *Response {
+	// cancel 函数会通过 closeResponse 在所有代码路径上被调用 md5:e670a9d606a72b8c
+	ctx, cancel := context.WithCancel(下载参数.I取上下文())
+	下载参数 = 下载参数.WithContext(ctx)
 	resp := &Response{
-		Request:    req,
-		Start:      time.Now(),
+		X下载参数:    下载参数,
+		X传输开始时间:      time.Now(),
 		Done:       make(chan struct{}, 0),
-		Filename:   req.Filename,
+		X文件名:   下载参数.X文件名,
 		ctx:        ctx,
 		cancel:     cancel,
-		bufferSize: req.BufferSize,
+		bufferSize: 下载参数.X缓冲区大小,
 	}
 	if resp.bufferSize == 0 {
-		// default to Client.BufferSize
-		resp.bufferSize = c.BufferSize
+		// 默认为Client.BufferSize md5:f7214bed22611823
+		resp.bufferSize = c.X缓冲区大小
 	}
 
-	// Run state-machine while caller is blocked to initialize the file transfer.
-	// Must never transition to the copyFile state - this happens next in another
-	// goroutine.
+// 当调用者被阻塞以初始化文件传输时，运行状态机。永远不要进入copyFile状态 - 这将在另一个goroutine中接下来发生。
+// md5:c59c8fd584f98402
 	c.run(resp, c.statFileInfo)
 
-	// Run copyFile in a new goroutine. copyFile will no-op if the transfer is
-	// already complete or failed.
+// 在新的goroutine中运行copyFile。如果传输已经完成或失败，copyFile将不执行任何操作。
+// md5:0fe588a8a89f07a6
 	go c.run(resp, c.copyFile)
 	return resp
 }
 
-// DoChannel executes all requests sent through the given Request channel, one
-// at a time, until it is closed by another goroutine. The caller is blocked
-// until the Request channel is closed and all transfers have completed. All
-// responses are sent through the given Response channel as soon as they are
-// received from the remote servers and can be used to track the progress of
-// each download.
-//
-// Slow Response receivers will cause a worker to block and therefore delay the
-// start of the transfer for an already initiated connection - potentially
-// causing a server timeout. It is the caller's responsibility to ensure a
-// sufficient buffer size is used for the Response channel to prevent this.
-//
-// If an error occurs during any of the file transfers it will be accessible via
-// the associated Response.Err function.
-
-// ff:
+// DoChannel 通过给定的 Request 通道顺序执行所有发送的请求，直到由其他goroutine关闭。调用者会在Request通道关闭且所有传输完成后被阻塞。一旦从远程服务器接收到响应，所有响应会立即通过给定的Response通道发送，并可用于跟踪每个下载的进度。
+// 
+// 如果Response接收器处理速度慢，会导致worker阻塞，从而延迟已经启动连接的传输开始时间——可能导致服务器超时。调用者需要确保为Response通道使用足够的缓冲大小以防止这种情况。
+// 
+// 在任何文件传输过程中如果发生错误，可以通过关联的Response.Err函数访问到该错误。
+// md5:1e8b3d5e8dee8a95
 func (c *Client) DoChannel(reqch <-chan *Request, respch chan<- *Response) {
-	// TODO: enable cancelling of batch jobs
+	// TODO：启用批量任务的取消功能 md5:551d7d31d87cb53d
 	for req := range reqch {
-		resp := c.Do(req)
+		resp := c.X下载(req)
 		respch <- resp
 		<-resp.Done
 	}
 }
 
-// DoBatch executes all the given requests using the given number of concurrent
-// workers. Control is passed back to the caller as soon as the workers are
-// initiated.
+// DoBatch 使用指定数量的并发工作者执行所有给定的请求。一旦工作者启动，控制权就会返回给调用者。
 //
-// If the requested number of workers is less than one, a worker will be created
-// for every request. I.e. all requests will be executed concurrently.
+// 如果请求的工作者数量小于1，那么将为每个请求创建一个工作者。即，所有请求将并行执行。
 //
-// If an error occurs during any of the file transfers it will be accessible via
-// call to the associated Response.Err.
+// 如果在任何文件传输过程中发生错误，可以通过调用关联的Response.Err来获取该错误。
 //
-// The returned Response channel is closed only after all of the given Requests
-// have completed, successfully or otherwise.
-
-// ff:多线程下载
-// requests:下载参数
-// workers:线程数量
-func (c *Client) DoBatch(workers int, requests ...*Request) <-chan *Response {
-	if workers < 1 {
-		workers = len(requests)
+// 返回的Response通道只会在所有给定的Requests完成（无论成功或失败）后关闭。
+// md5:a143d0d000672213
+func (c *Client) X多线程下载(线程数量 int, 下载参数 ...*Request) <-chan *Response {
+	if 线程数量 < 1 {
+		线程数量 = len(下载参数)
 	}
-	reqch := make(chan *Request, len(requests))
-	respch := make(chan *Response, len(requests))
+	reqch := make(chan *Request, len(下载参数))
+	respch := make(chan *Response, len(下载参数))
 	wg := sync.WaitGroup{}
-	for i := 0; i < workers; i++ {
+	for i := 0; i < 线程数量; i++ {
 		wg.Add(1)
 		go func() {
 			c.DoChannel(reqch, respch)
@@ -166,7 +134,7 @@ func (c *Client) DoBatch(workers int, requests ...*Request) <-chan *Response {
 
 	// queue requests
 	go func() {
-		for _, req := range requests {
+		for _, req := range 下载参数 {
 			reqch <- req
 		}
 		close(reqch)
@@ -176,19 +144,17 @@ func (c *Client) DoBatch(workers int, requests ...*Request) <-chan *Response {
 	return respch
 }
 
-// An stateFunc is an action that mutates the state of a Response and returns
-// the next stateFunc to be called.
+// StateFunc是一个动作，它会改变Response的状态，并返回下一个要调用的StateFunc。
+// md5:2f895dfc8babb8bb
 type stateFunc func(*Response) stateFunc
 
-// run calls the given stateFunc function and all subsequent returned stateFuncs
-// until a stateFunc returns nil or the Response.ctx is canceled. Each stateFunc
-// should mutate the state of the given Response until it has completed
-// downloading or failed.
+// run 调用给定的 stateFunc 函数，以及所有后续返回的 stateFuncs，直到某个 stateFunc 返回 nil 或者 Response 的 ctx 被取消。每个 stateFunc 应该修改给定 Response 的状态，直到下载完成或失败。
+// md5:dcde558208dbf3d5
 func (c *Client) run(resp *Response, f stateFunc) {
 	for {
 		select {
 		case <-resp.ctx.Done():
-			if resp.IsComplete() {
+			if resp.X是否已完成() {
 				return
 			}
 			resp.err = resp.ctx.Err()
@@ -203,21 +169,19 @@ func (c *Client) run(resp *Response, f stateFunc) {
 	}
 }
 
-// statFileInfo retrieves FileInfo for any local file matching
-// Response.Filename.
+// statFileInfo 获取与Response.Filename匹配的任何本地文件的FileInfo。
 //
-// If the file does not exist, is a directory, or its name is unknown the next
-// stateFunc is headRequest.
+// 如果文件不存在，是一个目录，或者其名称未知，则下一个状态函数为headRequest。
 //
-// If the file exists, Response.fi is set and the next stateFunc is
-// validateLocal.
+// 如果文件存在，则设置Response.fi，下一个状态函数为validateLocal。
 //
-// If an error occurs, the next stateFunc is closeResponse.
+// 如果发生错误，下一个状态函数为closeResponse。
+// md5:6285457c42618336
 func (c *Client) statFileInfo(resp *Response) stateFunc {
-	if resp.Request.NoStore || resp.Filename == "" {
+	if resp.X下载参数.X不写入本地文件系统 || resp.X文件名 == "" {
 		return c.headRequest
 	}
-	fi, err := os.Stat(resp.Filename)
+	fi, err := os.Stat(resp.X文件名)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return c.headRequest
@@ -226,64 +190,62 @@ func (c *Client) statFileInfo(resp *Response) stateFunc {
 		return c.closeResponse
 	}
 	if fi.IsDir() {
-		resp.Filename = ""
+		resp.X文件名 = ""
 		return c.headRequest
 	}
 	resp.fi = fi
 	return c.validateLocal
 }
 
-// validateLocal compares a local copy of the downloaded file to the remote
-// file.
-//
-// An error is returned if the local file is larger than the remote file, or
-// Request.SkipExisting is true.
-//
-// If the existing file matches the length of the remote file, the next
-// stateFunc is checksumFile.
-//
-// If the local file is smaller than the remote file and the remote server is
-// known to support ranged requests, the next stateFunc is getRequest.
+// validateLocal 将下载文件的本地副本与远程文件进行比较。
+// 
+// 如果本地文件大于远程文件，或者Request.SkipExisting 为 true，则返回错误。
+// 
+// 如果现有文件的大小与远程文件匹配，下一个状态函数是checksumFile。
+// 
+// 如果本地文件小于远程文件，并且已知远程服务器支持范围请求，下一个状态函数是getRequest。
+// md5:fb339cef020987be
 func (c *Client) validateLocal(resp *Response) stateFunc {
-	if resp.Request.SkipExisting {
-		resp.err = ErrFileExists
+	if resp.X下载参数.X跳过已存在文件 {
+		resp.err = ERR_文件已存在
 		return c.closeResponse
 	}
 
-	// determine target file size
-	expectedSize := resp.Request.Size
-	if expectedSize == 0 && resp.HTTPResponse != nil {
-		expectedSize = resp.HTTPResponse.ContentLength
+	// 确定目标文件大小 md5:b64a2f6b674bfe35
+	expectedSize := resp.X下载参数.X预期文件大小
+	if expectedSize == 0 && resp.HTTP响应 != nil {
+		expectedSize = resp.HTTP响应.ContentLength
 	}
 
 	if expectedSize == 0 {
-		// size is either actually 0 or unknown
-		// if unknown, we ask the remote server
-		// if known to be 0, we proceed with a GET
+// size 是实际大小，可能是0或未知
+// 如果未知，我们向远程服务器查询
+// 如果已知为0，我们继续使用GET请求
+// md5:b8aed7e2a19d006f
 		return c.headRequest
 	}
 
 	if expectedSize == resp.fi.Size() {
-		// local file matches remote file size - wrap it up
+		// 当本地文件的大小与远程文件相匹配时 - 封装它 md5:9020a4e52bdc768c
 		resp.DidResume = true
 		resp.bytesResumed = resp.fi.Size()
 		return c.checksumFile
 	}
 
-	if resp.Request.NoResume {
-		// local file should be overwritten
+	if resp.X下载参数.X不续传 {
+		// 当地文件应被覆盖 md5:c6963052a01c5c41
 		return c.getRequest
 	}
 
 	if expectedSize >= 0 && expectedSize < resp.fi.Size() {
-		// remote size is known, is smaller than local size and we want to resume
-		resp.err = ErrBadLength
+		// 远程大小已知，比本地大小小，并且我们想要恢复下载 md5:4eff80977d3bd5ad
+		resp.err = ERR_文件长度不匹配
 		return c.closeResponse
 	}
 
 	if resp.CanResume {
-		// set resume range on GET request
-		resp.Request.HTTPRequest.Header.Set(
+		// 在GET请求中设置恢复范围 md5:baef5df94e869e30
+		resp.X下载参数.Http协议头.Header.Set(
 			"Range",
 			fmt.Sprintf("bytes=%d-", resp.fi.Size()))
 		resp.DidResume = true
@@ -294,16 +256,16 @@ func (c *Client) validateLocal(resp *Response) stateFunc {
 }
 
 func (c *Client) checksumFile(resp *Response) stateFunc {
-	if resp.Request.hash == nil {
+	if resp.X下载参数.hash == nil {
 		return c.closeResponse
 	}
-	if resp.Filename == "" {
+	if resp.X文件名 == "" {
 		panic("grab: developer error: filename not set")
 	}
-	if resp.Size() < 0 {
+	if resp.X取总字节() < 0 {
 		panic("grab: developer error: size unknown")
 	}
-	req := resp.Request
+	req := resp.X下载参数
 
 	// compute checksum
 	var sum []byte
@@ -314,10 +276,10 @@ func (c *Client) checksumFile(resp *Response) stateFunc {
 
 	// compare checksum
 	if !bytes.Equal(sum, req.checksum) {
-		resp.err = ErrBadChecksum
-		if !resp.Request.NoStore && req.deleteOnError {
-			if err := os.Remove(resp.Filename); err != nil {
-				// err should be os.PathError and include file path
+		resp.err = ERR_文件校验失败
+		if !resp.X下载参数.X不写入本地文件系统 && req.deleteOnError {
+			if err := os.Remove(resp.X文件名); err != nil {
+				// err应该是os.PathError类型，并且应包含文件路径 md5:255ad01285b97e27
 				resp.err = fmt.Errorf(
 					"cannot remove downloaded file with checksum mismatch: %v",
 					err)
@@ -327,10 +289,10 @@ func (c *Client) checksumFile(resp *Response) stateFunc {
 	return c.closeResponse
 }
 
-// doHTTPRequest sends a HTTP Request and returns the response
+// doHTTPRequest 发送一个HTTP请求并返回响应 md5:19242108c18d9170
 func (c *Client) doHTTPRequest(req *http.Request) (*http.Response, error) {
-	if c.UserAgent != "" && req.Header.Get("User-Agent") == "" {
-		req.Header.Set("User-Agent", c.UserAgent)
+	if c.HTTP_UA != "" && req.Header.Get("User-Agent") == "" {
+		req.Header.Set("User-Agent", c.HTTP_UA)
 	}
 	return c.HTTPClient.Do(req)
 }
@@ -341,52 +303,50 @@ func (c *Client) headRequest(resp *Response) stateFunc {
 	}
 	resp.optionsKnown = true
 
-	if resp.Request.NoResume {
+	if resp.X下载参数.X不续传 {
 		return c.getRequest
 	}
 
-	if resp.Filename != "" && resp.fi == nil {
-		// destination path is already known and does not exist
+	if resp.X文件名 != "" && resp.fi == nil {
+		// 目标路径已知且不存在 md5:d19d7aa9a062a804
 		return c.getRequest
 	}
 
 	hreq := new(http.Request)
-	*hreq = *resp.Request.HTTPRequest
+	*hreq = *resp.X下载参数.Http协议头
 	hreq.Method = "HEAD"
 
-	resp.HTTPResponse, resp.err = c.doHTTPRequest(hreq)
+	resp.HTTP响应, resp.err = c.doHTTPRequest(hreq)
 	if resp.err != nil {
 		return c.closeResponse
 	}
-	resp.HTTPResponse.Body.Close()
+	resp.HTTP响应.Body.Close()
 
-	if resp.HTTPResponse.StatusCode != http.StatusOK {
+	if resp.HTTP响应.StatusCode != http.StatusOK {
 		return c.getRequest
 	}
 
-	// In case of redirects during HEAD, record the final URL and use it
-	// instead of the original URL when sending future requests.
-	// This way we avoid sending potentially unsupported requests to
-	// the original URL, e.g. "Range", since it was the final URL
-	// that advertised its support.
-	resp.Request.HTTPRequest.URL = resp.HTTPResponse.Request.URL
-	resp.Request.HTTPRequest.Host = resp.HTTPResponse.Request.Host
+// 如果在HEAD请求期间发生重定向，记录最终URL，并在发送后续请求时使用它。
+// 这样，我们就避免向原始URL发送可能不被支持的请求，例如"Range"，因为是最终URL表明了其支持。
+// md5:5c169e71aa18b9cb
+	resp.X下载参数.Http协议头.URL = resp.HTTP响应.Request.URL
+	resp.X下载参数.Http协议头.Host = resp.HTTP响应.Request.Host
 
 	return c.readResponse
 }
 
 func (c *Client) getRequest(resp *Response) stateFunc {
-	resp.HTTPResponse, resp.err = c.doHTTPRequest(resp.Request.HTTPRequest)
+	resp.HTTP响应, resp.err = c.doHTTPRequest(resp.X下载参数.Http协议头)
 	if resp.err != nil {
 		return c.closeResponse
 	}
 
-	// TODO: check Content-Range
+	// 待办事项：检查 Content-Range md5:1dd4a612f45654be
 
 	// check status code
-	if !resp.Request.IgnoreBadStatusCodes {
-		if resp.HTTPResponse.StatusCode < 200 || resp.HTTPResponse.StatusCode > 299 {
-			resp.err = StatusCodeError(resp.HTTPResponse.StatusCode)
+	if !resp.X下载参数.X忽略错误状态码 {
+		if resp.HTTP响应.StatusCode < 200 || resp.HTTP响应.StatusCode > 299 {
+			resp.err = StatusCodeError(resp.HTTP响应.StatusCode)
 			return c.closeResponse
 		}
 	}
@@ -395,34 +355,34 @@ func (c *Client) getRequest(resp *Response) stateFunc {
 }
 
 func (c *Client) readResponse(resp *Response) stateFunc {
-	if resp.HTTPResponse == nil {
+	if resp.HTTP响应 == nil {
 		panic("grab: developer error: Response.HTTPResponse is nil")
 	}
 
 	// check expected size
-	resp.sizeUnsafe = resp.HTTPResponse.ContentLength
+	resp.sizeUnsafe = resp.HTTP响应.ContentLength
 	if resp.sizeUnsafe >= 0 {
 		// remote size is known
 		resp.sizeUnsafe += resp.bytesResumed
-		if resp.Request.Size > 0 && resp.Request.Size != resp.sizeUnsafe {
-			resp.err = ErrBadLength
+		if resp.X下载参数.X预期文件大小 > 0 && resp.X下载参数.X预期文件大小 != resp.sizeUnsafe {
+			resp.err = ERR_文件长度不匹配
 			return c.closeResponse
 		}
 	}
 
 	// check filename
-	if resp.Filename == "" {
-		filename, err := guessFilename(resp.HTTPResponse)
+	if resp.X文件名 == "" {
+		filename, err := guessFilename(resp.HTTP响应)
 		if err != nil {
 			resp.err = err
 			return c.closeResponse
 		}
-		// Request.Filename will be empty or a directory
-		resp.Filename = filepath.Join(resp.Request.Filename, filename)
+		// Request.Filename将会是空的或者是一个目录 md5:9577464c343c9907
+		resp.X文件名 = filepath.Join(resp.X下载参数.X文件名, filename)
 	}
 
-	if !resp.Request.NoStore && resp.requestMethod() == "HEAD" {
-		if resp.HTTPResponse.Header.Get("Accept-Ranges") == "bytes" {
+	if !resp.X下载参数.X不写入本地文件系统 && resp.requestMethod() == "HEAD" {
+		if resp.HTTP响应.Header.Get("Accept-Ranges") == "bytes" {
 			resp.CanResume = true
 		}
 		return c.statFileInfo
@@ -430,19 +390,19 @@ func (c *Client) readResponse(resp *Response) stateFunc {
 	return c.openWriter
 }
 
-// openWriter opens the destination file for writing and seeks to the location
-// from whence the file transfer will resume.
+// openWriter 为写入打开目标文件，并定位到将继续传输的文件位置。
 //
-// Requires that Response.Filename and resp.DidResume are already be set.
+// 需要确保Response.Filename和resp.DidResume已经设置。
+// md5:5670da9b8c85a4b1
 func (c *Client) openWriter(resp *Response) stateFunc {
-	if !resp.Request.NoStore && !resp.Request.NoCreateDirectories {
-		resp.err = mkdirp(resp.Filename)
+	if !resp.X下载参数.X不写入本地文件系统 && !resp.X下载参数.X不自动创建目录 {
+		resp.err = mkdirp(resp.X文件名)
 		if resp.err != nil {
 			return c.closeResponse
 		}
 	}
 
-	if resp.Request.NoStore {
+	if resp.X下载参数.X不写入本地文件系统 {
 		resp.writer = &resp.storeBuffer
 	} else {
 		// compute write flags
@@ -451,14 +411,14 @@ func (c *Client) openWriter(resp *Response) stateFunc {
 			if resp.DidResume {
 				flag = os.O_APPEND | os.O_WRONLY
 			} else {
-				// truncate later in copyFile, if not cancelled
-				// by BeforeCopy hook
+// 如果BeforeCopy钩子没有取消，则稍后在copyFile中截断
+// md5:8d0fcf3dbf9d4eb0
 				flag = os.O_WRONLY
 			}
 		}
 
 		// open file
-		f, err := os.OpenFile(resp.Filename, flag, 0666)
+		f, err := os.OpenFile(resp.X文件名, flag, 0666)
 		if err != nil {
 			resp.err = err
 			return c.closeResponse
@@ -482,24 +442,24 @@ func (c *Client) openWriter(resp *Response) stateFunc {
 	}
 	b := make([]byte, resp.bufferSize)
 	resp.transfer = newTransfer(
-		resp.Request.Context(),
-		resp.Request.RateLimiter,
+		resp.X下载参数.I取上下文(),
+		resp.X下载参数.X速率限制器,
 		resp.writer,
-		resp.HTTPResponse.Body,
+		resp.HTTP响应.Body,
 		b)
 
-	// next step is copyFile, but this will be called later in another goroutine
+	// 下一步是copyFile，但这个操作将在另一个goroutine中稍后被调用。 md5:bdcea988806d0db1
 	return nil
 }
 
-// copy transfers content for a HTTP connection established via Client.do()
+// copy 将通过Client.do()建立的HTTP连接的内容进行传输 md5:feda3b303e54e72e
 func (c *Client) copyFile(resp *Response) stateFunc {
-	if resp.IsComplete() {
+	if resp.X是否已完成() {
 		return nil
 	}
 
 	// run BeforeCopy hook
-	if f := resp.Request.BeforeCopy; f != nil {
+	if f := resp.X下载参数.X传输开始之前回调; f != nil {
 		resp.err = f(resp)
 		if resp.err != nil {
 			return c.closeResponse
@@ -511,9 +471,9 @@ func (c *Client) copyFile(resp *Response) stateFunc {
 		panic("grab: developer error: Response.transfer is nil")
 	}
 
-	// We waited to truncate the file in openWriter() to make sure
-	// the BeforeCopy didn't cancel the copy. If this was an existing
-	// file that is not going to be resumed, truncate the contents.
+// 我们在openWriter()中推迟了截断文件的操作，以确保BeforeCopy不会取消复制。
+// 如果这是一个现有的、不打算恢复的文件，那么截断其内容。
+// md5:34b779d0e7dfa278
 	if t, ok := resp.writer.(truncater); ok && resp.fi != nil && !resp.DidResume {
 		t.Truncate(0)
 	}
@@ -525,25 +485,25 @@ func (c *Client) copyFile(resp *Response) stateFunc {
 	closeWriter(resp)
 
 	// set file timestamp
-	if !resp.Request.NoStore && !resp.Request.IgnoreRemoteTime {
-		resp.err = setLastModified(resp.HTTPResponse, resp.Filename)
+	if !resp.X下载参数.X不写入本地文件系统 && !resp.X下载参数.X忽略远程时间 {
+		resp.err = setLastModified(resp.HTTP响应, resp.X文件名)
 		if resp.err != nil {
 			return c.closeResponse
 		}
 	}
 
-	// update transfer size if previously unknown
-	if resp.Size() < 0 {
+	// 如果之前未知，更新传输大小 md5:d285b51e526307dd
+	if resp.X取总字节() < 0 {
 		discoveredSize := resp.bytesResumed + bytesCopied
 		atomic.StoreInt64(&resp.sizeUnsafe, discoveredSize)
-		if resp.Request.Size > 0 && resp.Request.Size != discoveredSize {
-			resp.err = ErrBadLength
+		if resp.X下载参数.X预期文件大小 > 0 && resp.X下载参数.X预期文件大小 != discoveredSize {
+			resp.err = ERR_文件长度不匹配
 			return c.closeResponse
 		}
 	}
 
 	// run AfterCopy hook
-	if f := resp.Request.AfterCopy; f != nil {
+	if f := resp.X下载参数.X传输完成之后回调; f != nil {
 		resp.err = f(resp)
 		if resp.err != nil {
 			return c.closeResponse
@@ -560,9 +520,9 @@ func closeWriter(resp *Response) {
 	resp.writer = nil
 }
 
-// close finalizes the Response
+// close 对Response进行最终化处理 md5:5f125695e8212203
 func (c *Client) closeResponse(resp *Response) stateFunc {
-	if resp.IsComplete() {
+	if resp.X是否已完成() {
 		panic("grab: developer error: response already closed")
 	}
 
@@ -570,7 +530,7 @@ func (c *Client) closeResponse(resp *Response) stateFunc {
 	closeWriter(resp)
 	resp.closeResponseBody()
 
-	resp.End = time.Now()
+	resp.X传输完成时间 = time.Now()
 	close(resp.Done)
 	if resp.cancel != nil {
 		resp.cancel()

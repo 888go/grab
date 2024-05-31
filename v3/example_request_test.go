@@ -1,4 +1,4 @@
-package grab
+package 下载类
 
 import (
 	"context"
@@ -9,20 +9,20 @@ import (
 )
 
 func ExampleRequest_WithContext() {
-	// create context with a 100ms timeout
+	// 使用100毫秒超时创建上下文 md5:20d987ef3ab9f9e9
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
 
-	// create download request with context
-	req, err := NewRequest("", "http://example.com/example.zip")
+	// 使用上下文创建下载请求 md5:cd71b43cad23f3e2
+	req, err := X生成下载参数("", "http://example.com/example.zip")
 	if err != nil {
 		panic(err)
 	}
 	req = req.WithContext(ctx)
 
 	// send download request
-	resp := DefaultClient.Do(req)
-	if err := resp.Err(); err != nil {
+	resp := DefaultClient.X下载(req)
+	if err := resp.X等待错误(); err != nil {
 		fmt.Println("error: request cancelled")
 	}
 
@@ -32,7 +32,7 @@ func ExampleRequest_WithContext() {
 
 func ExampleRequest_SetChecksum() {
 	// create download request
-	req, err := NewRequest("", "http://example.com/example.zip")
+	req, err := X生成下载参数("", "http://example.com/example.zip")
 	if err != nil {
 		panic(err)
 	}
@@ -42,11 +42,11 @@ func ExampleRequest_SetChecksum() {
 	if err != nil {
 		panic(err)
 	}
-	req.SetChecksum(sha256.New(), sum, true)
+	req.X设置完成后效验(sha256.New(), sum, true)
 
-	// download and validate file
-	resp := DefaultClient.Do(req)
-	if err := resp.Err(); err != nil {
+	// 下载并验证文件 md5:04a19a87a53ccecb
+	resp := DefaultClient.X下载(req)
+	if err := resp.X等待错误(); err != nil {
 		panic(err)
 	}
 }

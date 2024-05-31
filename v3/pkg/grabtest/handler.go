@@ -31,9 +31,6 @@ type handler struct {
 	rateLimiter        *time.Ticker
 }
 
-
-// ff:
-// options:
 func NewHandler(options ...HandlerOption) (http.Handler, error) {
 	h := &handler{
 		statusCodeFunc:  func(req *http.Request) int { return http.StatusOK },
@@ -49,12 +46,6 @@ func NewHandler(options ...HandlerOption) (http.Handler, error) {
 	return h, nil
 }
 
-
-// ff:
-// options:
-// f:
-// url:
-// t:
 func WithTestServer(t *testing.T, f func(url string), options ...HandlerOption) {
 	h, err := NewHandler(options...)
 	if err != nil {
@@ -75,17 +66,13 @@ func (h *handler) close() {
 	}
 }
 
-
-// ff:
-// r:
-// w:
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// delay response
 	if h.ttfb > 0 {
 		time.Sleep(h.ttfb)
 	}
 
-	// validate request method
+	// 验证请求方法 md5:71e60e72d4e0cfd0
 	allowed := false
 	for _, m := range h.methodWhitelist {
 		if r.Method == m {
@@ -103,7 +90,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Accept-Ranges", "bytes")
 	}
 
-	// set attachment filename
+	// 设置附件文件名 md5:853840c1bcd20ee7
 	if h.attachmentFilename != "" {
 		w.Header().Set(
 			"Content-Disposition",
@@ -111,7 +98,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	// set last modified timestamp
+	// 设置最后修改时间戳 md5:78efc5dd8a42b4cd
 	lastMod := time.Now()
 	if !h.lastModified.IsZero() {
 		lastMod = h.lastModified
@@ -139,18 +126,18 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Del(key)
 	}
 
-	// send header and status code
+	// 发送头和状态码 md5:502df63c08265698
 	w.WriteHeader(h.statusCodeFunc(r))
 
 	// send body
 	if r.Method == "GET" {
-		// use buffered io to reduce overhead on the reader
+		// 使用缓冲输入流来减少读者的开销 md5:8df643db318497f8
 		bw := bufio.NewWriterSize(w, 4096)
 		for i := offset; !isRequestClosed(r) && i < h.contentLength; i++ {
 			bw.Write([]byte{byte(i)})
 			if h.rateLimiter != nil {
 				bw.Flush()
-				w.(http.Flusher).Flush() // force the server to send the data to the client
+				w.(http.Flusher).Flush() // 强制服务器将数据发送到客户端 md5:dfabe937f3096ed4
 				select {
 				case <-h.rateLimiter.C:
 				case <-r.Context().Done():
@@ -163,7 +150,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// isRequestClosed returns true if the client request has been canceled.
+// isRequestClosed 判断客户端请求是否已取消，如果已取消则返回true。 md5:9265ac4addb1f469
 func isRequestClosed(r *http.Request) bool {
 	return r.Context().Err() != nil
 }

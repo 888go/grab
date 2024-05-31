@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cavaliergopher/grab/v3/pkg/grabui"
+	"github.com/888go/grab/v3/pkg/grabui"
 )
 
 func main() {
@@ -23,10 +23,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	// return the number of failed downloads as exit code
+	// 作为退出代码，返回失败下载的数量 md5:b33b9e56ad5e3d93
 	failed := 0
 	for resp := range respch {
-		if resp.Err() != nil {
+		if resp.X等待错误() != nil {
 			failed++
 		}
 	}

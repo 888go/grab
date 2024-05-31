@@ -7,34 +7,29 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cavaliergopher/grab/v3"
+	"github.com/888go/grab/v3"
 )
 
 type ConsoleClient struct {
 	mu                            sync.Mutex
-	client                        *grab.Client
+	client                        *下载类.Client
 	succeeded, failed, inProgress int
-	responses                     []*grab.Response
+	responses                     []*下载类.Response
 }
 
-
-// ff:
-// client:
-func NewConsoleClient(client *grab.Client) *ConsoleClient {
+func NewConsoleClient(client *下载类.Client) *ConsoleClient {
 	return &ConsoleClient{
 		client: client,
 	}
 }
 
-
-// ff:
 func (c *ConsoleClient) Do(
 	ctx context.Context,
 	workers int,
-	reqs ...*grab.Request,
-) <-chan *grab.Response {
-	// buffer size prevents slow receivers causing back pressure
-	pump := make(chan *grab.Response, len(reqs))
+	reqs ...*下载类.Request,
+) <-chan *下载类.Response {
+	// 缓冲区大小可以防止接收者处理速度慢导致的后压（back pressure）问题。 md5:5cad013415a13329
+	pump := make(chan *下载类.Response, len(reqs))
 
 	go func() {
 		c.mu.Lock()
@@ -43,13 +38,13 @@ func (c *ConsoleClient) Do(
 		c.failed = 0
 		c.inProgress = 0
 		c.succeeded = 0
-		c.responses = make([]*grab.Response, 0, len(reqs))
+		c.responses = make([]*下载类.Response, 0, len(reqs))
 		if c.client == nil {
-			c.client = grab.DefaultClient
+			c.client = 下载类.DefaultClient
 		}
 
 		fmt.Printf("Downloading %d files...\n", len(reqs))
-		respch := c.client.DoBatch(workers, reqs...)
+		respch := c.client.X多线程下载(workers, reqs...)
 		t := time.NewTicker(200 * time.Millisecond)
 		defer t.Stop()
 
@@ -61,16 +56,16 @@ func (c *ConsoleClient) Do(
 
 			case resp := <-respch:
 				if resp != nil {
-					// a new response has been received and has started downloading
+					// 已经接收到一个新的响应并开始下载 md5:15f5f005f545cc95
 					c.responses = append(c.responses, resp)
 					pump <- resp // send to caller
 				} else {
-					// channel is closed - all downloads are complete
+					// channel已关闭 - 所有下载已完成 md5:7f2447cabb28251e
 					break Loop
 				}
 
 			case <-t.C:
-				// update UI on clock tick
+				// 在时钟Tick时更新UI md5:a52f30bc4b10a415
 				c.refresh()
 			}
 		}
@@ -87,44 +82,44 @@ func (c *ConsoleClient) Do(
 	return pump
 }
 
-// refresh prints the progress of all downloads to the terminal
+// refresh 会将所有下载的进度输出到终端 md5:b45b3af8576f0c8e
 func (c *ConsoleClient) refresh() {
-	// clear lines for incomplete downloads
+	// 清除不完整下载的行 md5:6f2c2c6ad26e77ea
 	if c.inProgress > 0 {
 		fmt.Printf("\033[%dA\033[K", c.inProgress)
 	}
 
-	// print newly completed downloads
+	// 打印新完成的下载 md5:7ffedfed87948493
 	for i, resp := range c.responses {
-		if resp != nil && resp.IsComplete() {
-			if resp.Err() != nil {
+		if resp != nil && resp.X是否已完成() {
+			if resp.X等待错误() != nil {
 				c.failed++
 				fmt.Fprintf(os.Stderr, "Error downloading %s: %v\n",
-					resp.Request.URL(),
-					resp.Err())
+					resp.X下载参数.X取下载链接(),
+					resp.X等待错误())
 			} else {
 				c.succeeded++
 				fmt.Printf("Finished %s %s / %s (%d%%)\n",
-					resp.Filename,
-					byteString(resp.BytesComplete()),
-					byteString(resp.Size()),
-					int(100*resp.Progress()))
+					resp.X文件名,
+					byteString(resp.X已完成字节()),
+					byteString(resp.X取总字节()),
+					int(100*resp.X取进度()))
 			}
 			c.responses[i] = nil
 		}
 	}
 
-	// print progress for incomplete downloads
+	// /* 打印不完整下载的进度 */ md5:4b96256fbbba36a5
 	c.inProgress = 0
 	for _, resp := range c.responses {
 		if resp != nil {
 			fmt.Printf("Downloading %s %s / %s (%d%%) - %s ETA: %s \033[K\n",
-				resp.Filename,
-				byteString(resp.BytesComplete()),
-				byteString(resp.Size()),
-				int(100*resp.Progress()),
-				bpsString(resp.BytesPerSecond()),
-				etaString(resp.ETA()))
+				resp.X文件名,
+				byteString(resp.X已完成字节()),
+				byteString(resp.X取总字节()),
+				int(100*resp.X取进度()),
+				bpsString(resp.X取每秒字节()),
+				etaString(resp.X取估计完成时间()))
 			c.inProgress++
 		}
 	}
@@ -164,7 +159,7 @@ func etaString(eta time.Time) string {
 	if d < time.Second {
 		return "<1s"
 	}
-	// truncate to 1s resolution
+	// 截断到1秒分辨率 md5:d627107a4a28696f
 	d /= time.Second
 	d *= time.Second
 	return d.String()

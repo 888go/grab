@@ -3,20 +3,18 @@ package grabui
 import (
 	"context"
 
-	"github.com/cavaliergopher/grab/v3"
+	"github.com/888go/grab/v3"
 )
 
-
-// ff:
 func GetBatch(
 	ctx context.Context,
 	workers int,
 	dst string,
 	urlStrs ...string,
-) (<-chan *grab.Response, error) {
-	reqs := make([]*grab.Request, len(urlStrs))
+) (<-chan *下载类.Response, error) {
+	reqs := make([]*下载类.Request, len(urlStrs))
 	for i := 0; i < len(urlStrs); i++ {
-		req, err := grab.NewRequest(dst, urlStrs[i])
+		req, err := 下载类.X生成下载参数(dst, urlStrs[i])
 		if err != nil {
 			return nil, err
 		}
@@ -24,6 +22,6 @@ func GetBatch(
 		reqs[i] = req
 	}
 
-	ui := NewConsoleClient(grab.DefaultClient)
+	ui := NewConsoleClient(下载类.DefaultClient)
 	return ui.Do(ctx, workers, reqs...), nil
 }

@@ -1,4 +1,4 @@
-package grab
+package 下载类
 
 import (
 	"context"
@@ -6,11 +6,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/cavaliergopher/grab/v3/pkg/bps"
+	"github.com/888go/grab/v3/pkg/bps"
 )
 
 type transfer struct {
-	n     int64 // must be 64bit aligned on 386
+	n     int64 // 在386架构上必须是64位对齐 md5:abe49438c68a8c64
 	ctx   context.Context
 	gauge bps.Gauge
 	lim   RateLimiter
@@ -22,7 +22,7 @@ type transfer struct {
 func newTransfer(ctx context.Context, lim RateLimiter, dst io.Writer, src io.Reader, buf []byte) *transfer {
 	return &transfer{
 		ctx:   ctx,
-		gauge: bps.NewSMA(6), // five second moving average sampling every second
+		gauge: bps.NewSMA(6), // 每秒采样五秒滑动平均值 md5:5bcc165c9abe93fa
 		lim:   lim,
 		w:     dst,
 		r:     src,
@@ -30,11 +30,10 @@ func newTransfer(ctx context.Context, lim RateLimiter, dst io.Writer, src io.Rea
 	}
 }
 
-// copy behaves similarly to io.CopyBuffer except that it checks for cancelation
-// of the given context.Context, reports progress in a thread-safe manner and
-// tracks the transfer rate.
+// copy 的行为类似于 io.CopyBuffer，但它会检查给定的 context.Context 是否被取消，以线程安全的方式报告进度，并跟踪传输速率。
+// md5:41ad622882e2be6a
 func (c *transfer) copy() (written int64, err error) {
-	// maintain a bps gauge in another goroutine
+	// 在另一个goroutine中维护一个bps（每秒字节）仪表盘 md5:e4bdbe611923ed71
 	ctx, cancel := context.WithCancel(c.ctx)
 	defer cancel()
 	go bps.Watch(ctx, c.gauge, c.N, time.Second)
@@ -84,10 +83,7 @@ func (c *transfer) copy() (written int64, err error) {
 	return written, err
 }
 
-// N returns the number of bytes transferred.
-
-// ff:
-// n:
+// N返回传输的字节数。 md5:9d2049135c9567cb
 func (c *transfer) N() (n int64) {
 	if c == nil {
 		return 0
@@ -96,11 +92,8 @@ func (c *transfer) N() (n int64) {
 	return
 }
 
-// BPS returns the current bytes per second transfer rate using a simple moving
-// average.
-
-// ff:
-// bps:
+// BPS 返回当前的每秒字节数传输速率，使用简单的移动平均方法。
+// md5:f09c67b9534a83a1
 func (c *transfer) BPS() (bps float64) {
 	if c == nil || c.gauge == nil {
 		return 0

@@ -1,4 +1,4 @@
-package grab
+package 下载类
 
 import (
 	"fmt"
@@ -50,8 +50,9 @@ func TestURLFilenames(t *testing.T) {
 				req, err := http.NewRequest("GET", tc, nil)
 				if err != nil {
 					if tc == "http://test.com/filename\x00" {
-						// Since go1.12, urls with invalid control character return an error
-						// See https://github.com/golang/go/commit/829c5df58694b3345cb5ea41206783c8ccf5c3ca
+// 自从go1.12以来，包含无效控制字符的URL会返回一个错误
+// 参见：https://github.com/golang/go/commit/829c5df58694b3345cb5ea41206783c8ccf5c3ca
+// md5:f056679c63bd176a
 						t.Skip()
 					}
 				}
@@ -60,8 +61,8 @@ func TestURLFilenames(t *testing.T) {
 				}
 
 				_, err = guessFilename(resp)
-				if err != ErrNoFilename {
-					t.Errorf("expected '%v', got '%v'", ErrNoFilename, err)
+				if err != ERR_无法确定文件名 {
+					t.Errorf("expected '%v', got '%v'", ERR_无法确定文件名, err)
 				}
 			})
 		}
@@ -125,8 +126,8 @@ func TestHeaderFilenames(t *testing.T) {
 
 		for _, tc := range testCases {
 			setFilename(resp, tc)
-			if actual, err := guessFilename(resp); err != ErrNoFilename {
-				t.Errorf("expected: %v (%v), got: %v (%v)", ErrNoFilename, tc, err, actual)
+			if actual, err := guessFilename(resp); err != ERR_无法确定文件名 {
+				t.Errorf("expected: %v (%v), got: %v (%v)", ERR_无法确定文件名, tc, err, actual)
 			}
 		}
 	})
