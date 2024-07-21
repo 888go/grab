@@ -40,8 +40,8 @@
 <原文结束>
 
 # <翻译开始>
-// 防止sampleCount发生整数溢出。值大于或等于maxSamples具有相同的语义含义。
-// md5:c2f0ebfb0b578a39
+	// 防止sampleCount发生整数溢出。值大于或等于maxSamples具有相同的语义含义。
+	// md5:c2f0ebfb0b578a39
 # <翻译结束>
 
 

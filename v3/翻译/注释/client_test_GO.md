@@ -212,8 +212,8 @@
 <原文结束>
 
 # <翻译开始>
-// 确保在BeforeCopy钩子有机会取消请求之前，现有的本地文件不会被截断
-// md5:a4a1cc70630a4253
+	// 确保在BeforeCopy钩子有机会取消请求之前，现有的本地文件不会被截断
+	// md5:a4a1cc70630a4253
 # <翻译结束>
 
 
@@ -285,8 +285,8 @@
 <原文结束>
 
 # <翻译开始>
-// expectSize 必须足够大，以防止DefaultClient.Do在返回Response之前预读取整个正文并计算ContentLength。
-// md5:2fa7f5fccb977406
+	// expectSize 必须足够大，以防止DefaultClient.Do在返回Response之前预读取整个正文并计算ContentLength。
+	// md5:2fa7f5fccb977406
 # <翻译结束>
 
 

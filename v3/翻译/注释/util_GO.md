@@ -16,12 +16,12 @@
 <原文结束>
 
 # <翻译开始>
-// https://tools.ietf.org/html/rfc7232#section-2.2
-// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Last-Modified
-// 
-// 这段注释引用了RFC 7232（HTTP/1.1状态码和首部字段）的第2.2节。
-// 它可能与HTTP响应头中的"Last-Modified"字段有关，该字段表示资源的最后修改日期，常用于决定是否需要重新获取资源。MDN（Mozilla开发者网络）文档对此字段有详细说明。
-// md5:e0a757b6022b2ca0
+	// https:	//tools.ietf.org/html/rfc7232#section-2.2
+	// https:	//developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Last-Modified
+	// 
+	// 这段注释引用了RFC 7232（HTTP/1.1状态码和首部字段）的第2.2节。
+	// 它可能与HTTP响应头中的"Last-Modified"字段有关，该字段表示资源的最后修改日期，常用于决定是否需要重新获取资源。MDN（Mozilla开发者网络）文档对此字段有详细说明。
+	// md5:e0a757b6022b2ca0
 # <翻译结束>
 
 
