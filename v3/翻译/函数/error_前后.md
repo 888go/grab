@@ -14,6 +14,7 @@
 # qm= 前面,跳转到前面进行重命名.文档内如果有多个相同的,会一起重命名.
 # hm= 后面,跳转到后面进行重命名.文档内如果有多个相同的,会一起重命名.
 # cz= 查找,配合前面/后面使用,
+# zz= 正则查找,配合前面/后面使用, 有设置正则查找,就不用设置上面的查找
 # 如: type Regexp struct {//qm:正则 cz:Regexp struct
 #
 # th= 替换,用于替换文本,文档内如果有多个相同的,会一起替换
@@ -27,34 +28,29 @@
 
 # **_追加.md 文件备注:
 # 在代码内追加代码,如:
-# //zj:
+# //zj:前面一行的代码,如果为空,追加到末尾行
 # func (re *Regexp) X取文本() string { 
 # re.F.String()
 # }
 # //zj:
 # 备注结束
 
-[Request *Request]
-qm=下载参数
-hm=
-cz=Request *
+[ErrBadLength = errors.New("bad content length")]
+qm=ERR_文件长度不匹配
+cz=ErrBadLength #等号# errors.New
 
-[HTTPResponse *http.Response]
-qm=HTTP响应
-hm=
-cz=HTTPResponse *http.Response
+[ErrBadChecksum = errors.New("checksum mismatch")]
+qm=ERR_文件校验失败
+cz=ErrBadChecksum #等号# errors.New
 
-[Filename string]
-qm=文件名
-hm=
-cz=Filename string
+[ErrNoFilename = errors.New("no filename could be determined")]
+qm=ERR_无法确定文件名
+cz=ErrNoFilename #等号# errors.New
 
-[Start time.Time]
-qm=传输开始时间
-hm=
-cz=Start time.Time
+[ErrNoTimestamp = errors.New("no timestamp could be determined for the remote file")]
+qm=ERR_无法确定时间戳
+cz=ErrNoTimestamp #等号# errors.New
 
-[End time.Time]
-qm=传输完成时间
-hm=
-cz=End time.Time
+[ErrFileExists = errors.New("file exists")]
+qm=ERR_文件已存在
+cz=ErrFileExists #等号# errors.New
